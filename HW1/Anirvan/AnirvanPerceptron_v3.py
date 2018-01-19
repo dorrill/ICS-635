@@ -1,5 +1,5 @@
 #Anirvan's crude model of two or more perceptrons in series, based on v2
-#Not sure if this is even a thing. Maybe implement two of more perceptrons in parallel/grid?
+#Not sure if this is even a thing. Maybe implement two or more perceptrons in parallel/grid?
 
 import sys
 import os
