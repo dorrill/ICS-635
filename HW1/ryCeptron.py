@@ -34,7 +34,7 @@ def generate_training_output(t_data):	#takes training data of x's, y's -> x = t[
 			trained_outputs.append(0)
 	return trained_outputs
 
-def plot_stuff(trained_weights,training_data):
+def plot_stuff(trained_weights,training_data,epoch):
 	x1=-10
 	y1=(m*x1)+b
 	x2=10
@@ -42,7 +42,7 @@ def plot_stuff(trained_weights,training_data):
 	plt.figure()
 	plt.xlabel('x')
 	plt.ylabel('y')
-	plt.title('Learning Linearly Separable Data')
+	plt.title('High Learning Rate: %s pts, rate: %s, sigma=%s'%(data_length,learning_rate,t_sigma))
 	plt.axis([-20, 20, -20, 20])
 	plt.plot([x1, x2], [y1, y2], 'k-', color = 'r',label='Correct line')
 
@@ -57,6 +57,7 @@ def plot_stuff(trained_weights,training_data):
 		else:
 			plt.scatter(training_data[0][i],training_data[1][i],c='b')
 	plt.legend(loc=1)
+	#plt.savefig('./plots/num_pts%s_lrate%s_tsigma%s_epoch%s.png'%(data_length,learning_rate,t_sigma,epoch))
 	plt.show()
 
 
@@ -74,10 +75,10 @@ def update_weights(data,trained_outputs,weights,l_rate):	#takes training data an
 				weights[j] = weights[j] + (l_rate)*(trained_outputs[i]-output)*dat_point[j]
 	return weights
 
-data_length = 200	#how many data points to create
-learning_rate = 0.05
+data_length = 1000	#how many data points to create
+learning_rate = 0.1
 
-t_mu, t_sigma = -1, 7 # mean and standard deviation
+t_mu, t_sigma = -1, 4 # mean and standard deviation
 training_x = np.random.normal(t_mu, t_sigma, data_length)
 training_y = np.random.normal(t_mu, t_sigma, data_length)
 training_data = (training_x,training_y)
@@ -85,14 +86,16 @@ training_data = (training_x,training_y)
 training_outputs = generate_training_output(training_data)
 
 rand_weights = (np.random.normal(0, 0.05,3)) #generate three training rates -> w_intercept,w_x,w_y
-epochs = 1
+epochs = 9
 trained_weights = update_weights(training_data,training_outputs,rand_weights,learning_rate)
-plot_stuff(trained_weights,training_data)
-for k in range(0,epochs):
+plot_stuff(trained_weights,training_data,0)
+for k in range(1,epochs):
 	trained_weights = update_weights(training_data,training_outputs,trained_weights,learning_rate)
-	plot_stuff(trained_weights,training_data)
+	plot_stuff(trained_weights,training_data,k)
 	print "Trained weights: ",trained_weights/(trained_weights[2])
 
 
 
-		
+
+
+	
