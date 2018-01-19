@@ -1,8 +1,0 @@
-N = 300 #number of points
-min = -100
-max = 100
-
-rate = 0.0002
-
-Answers = Designator_1(x,y,N)
-max_attempt = 50000
