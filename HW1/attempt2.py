@@ -7,7 +7,7 @@ from numpy import array
 import matplotlib.pyplot as plt
 
 
-N = 300 #number of points
+N = 100 #number of points
 min = -100
 max = 100
 
@@ -54,7 +54,7 @@ def dotproduct(x,y,N):
     return sum
 
 def Function(xcor, ycor, w_xcor, w_ycor, bias):
-    if xcor*w_xcor + ycor*w_ycor + bias > 7:
+    if xcor*w_xcor + ycor*w_ycor + bias > intercept:
         return 1
     else:
         return 0
@@ -82,7 +82,7 @@ def main():
         rate = 0.0002
 
         Answers = Designator_1(x,y,N)
-        max_attempt = 50000
+        max_attempt = 10000
 
         graph_expected("x/{} + {}".format(m, -1*intercept/m), min, max)
         
