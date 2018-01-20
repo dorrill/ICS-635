@@ -1,5 +1,5 @@
-#Anirvan's crude model of two or more perceptrons in series, based on v2
-#Not sure if this is even a thing. Maybe implement two or more perceptrons in parallel/grid?
+#Anirvan's perceptron model, based on v2. Now perceptron keep learning over the data set till error
+#for each point is zero
 
 import sys
 import os
@@ -68,9 +68,9 @@ def main():
 
         for i in range(0,N):
             attempts = 1
-            classification = 0 #initialize
+            classification = 1 #initialize with a bad classication
 
-            while classification == 0 and attempts < max_attempts:
+            while classification == 1 and attempts < max_attempts:
                 y_calc = m[0]*x[i]+m[1]
 
                 if y_calc < y[i]:
@@ -79,11 +79,11 @@ def main():
                     perceptron_output = 1
 
                 if perceptron_output*label[i] == 1:
-                    classification = 1 #good classification
+                    classification = 0 #good classification
                 else:
-                    classification = 0 #bad classification
+                    classification = 1 #bad classification
 
-                if classification == 0:
+                if classification == 1: #if classification is bad, weights are shifted/trained.
                     m[0] = m[0] + learning_rate*(label[i]-perceptron_output)*x[i]
                     m[1] = m[1] + learning_rate_b*(label[i]-perceptron_output)
                     plots_for_gif(N, x, y, m, label, 1, i, attempts)
@@ -93,59 +93,12 @@ def main():
                 if attempts == max_attempts:
                     print("I give up with point",i)
 
-        for i in range(0,N): #recheck, run 2
-            attempts = 1
-            classification = 0 #initialize
+		#now test the final weights on the sample, to check if they still classify all training points correctly 
+		
+		#for each point in sample, see if it correctly classified.
+		#store the new classification, either "good" or "bad" in an arrray.
+		#if any classification is bad, repeat the for loop
 
-            while classification == 0 and attempts < max_attempts:
-                y_calc = m[0]*x[i]+m[1]
-
-                if y_calc < y[i]:
-                    perceptron_output = -1
-                else:
-                    perceptron_output = 1
-
-                if perceptron_output*label[i] == 1:
-                    classification = 1 #good classification
-                else:
-                    classification = 0 #bad classification
-
-                if classification == 0:
-                    m[0] = m[0] + learning_rate*(label[i]-perceptron_output)*x[i]
-                    m[1] = m[1] + learning_rate_b*(label[i]-perceptron_output)
-                    plots_for_gif(N, x, y, m, label, 2, i, attempts)
-                
-                print i, attempts, classification
-                attempts = attempts + 1
-                if attempts == max_attempts:
-                    print("I give up with point",i)
-
-        for i in range(0,N): #recheck, run 3
-            attempts = 1
-            classification = 0 #initialize
-
-            while classification == 0 and attempts < max_attempts:
-                y_calc = m[0]*x[i]+m[1]
-
-                if y_calc < y[i]:
-                    perceptron_output = -1
-                else:
-                    perceptron_output = 1
-
-                if perceptron_output*label[i] == 1:
-                    classification = 1 #good classification
-                else:
-                    classification = 0 #bad classification
-
-                if classification == 0:
-                    m[0] = m[0] + learning_rate*(label[i]-perceptron_output)*x[i]
-                    m[1] = m[1] + learning_rate_b*(label[i]-perceptron_output)
-                    plots_for_gif(N, x, y, m, label, 3, i, attempts)
-                
-                print i, attempts, classification
-                attempts = attempts + 1
-                if attempts == max_attempts:
-                    print("I give up with point",i)
 
         print (m)
 
