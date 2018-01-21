@@ -32,21 +32,21 @@ def draw_line(formula, min, max, color = False):
 
 
 def plots_for_gif(N, x, y, m, m_true, label, counter0, counter1, counter2, true_line = False):
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8,8))
     ax = fig.add_subplot(111)
 
     axes = plt.gca()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Slope = %s, Intercept = %s'%(m[0], m[1]))
+    plt.title('True slope: %.3f, Learnt slope = %.3f, True intercept = %.3f, Learnt intercept = %.3f'%(m_true[0], m[0], m_true[1], m[1]))
     axes.set_xlim([0,1])
     axes.set_ylim([0,1])
     
     for i in range(0,N):
         if label[i] == 1:
-            ax.plot(x[i], y[i], "c.",  marker ='x', ms=10)
+            ax.plot(x[i], y[i], "c.",  marker ='x', ms=5)
         else:
-            ax.plot(x[i], y[i], "c.",  marker ='o', ms=10)
+            ax.plot(x[i], y[i], "c.",  marker ='o', ms=5)
     if true_line == False:
     	draw_line("x*{} + {}".format(m[0] ,m[1]), min, max, True)
     	plt.savefig('Plots/Anim_run_%s_i_%s_a_%s.png'%(counter0, counter1, counter2), bbox_inches='tight' )
@@ -97,7 +97,7 @@ def main():
         # y = [.2, .8, .2, .8]
         # label = [1, -1, -1, 1]
 
-        N = 50
+        N = 500
         x = []
         y = []
         label = []
@@ -113,8 +113,8 @@ def main():
         print label
         
         m = [1, 0.1] #m are my weigts, [0.01, 1], [-4, 8] #random guess
-        learning_rate = 0.1 #random guess
-        learning_rate_b = 0.1 #random guess
+        learning_rate = 0.01 #random guess
+        learning_rate_b = 0.01 #random guess
         max_attempts = 200 #20 #maximum attempts allowed to learn a given data point. Might be redundant. If max attempts are exceeded, increase learning rate.
         total_classification_errors = 1 #initialize
         epoch = 1 #initialize; to count how many times learing is done over given data set
@@ -154,10 +154,11 @@ def main():
 			print epoch, total_classification_errors
 			epoch = epoch + 1
 	plots_for_gif(N, x, y, m, m_true, label, epoch, i, learning_iterations, True)
+	print (m_true)
 	print (m, learning_iterations)
 
 
 main()
-#plt.show()
+plt.show()
 fig = plt.figure(2)
 
