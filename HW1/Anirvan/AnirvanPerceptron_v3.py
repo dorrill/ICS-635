@@ -1,28 +1,37 @@
-#Anirvan's perceptron model, based on v2. Now perceptron keep learning over the data set till error
-#for each point is zero
+#Anirvan's perceptron
+#Creates a random true line, and generates data points with labels about that line
+#Then, it uses the perceptron model to try to learn the true line
+
+# Variables to play with
+# N, number of data points in sample
+# m, my weigts; random guess
+# learning_rate; for parameter m0 or slope; a random guess
+# learning_rate_b; for parameter m1 or y-intercept; a random guess
+# max_epochs; number of runs allowed over data set to learn true line
+
 
 import sys
-import os
+import os, subprocess
+import random
 import numpy as np
-from numpy import random as rad
 from numpy import array
 
 import matplotlib.pyplot as plt
 
+#define overall bounds for data, and parameters for the true line, which the perceptron needs to learn
 min = 0
-max = 10
+max = 1
 
-def graph_expected(formula, min, max):
+def draw_line(formula, min, max, color = False):
     x = np.linspace(min, max, 200)
     y = eval(formula)
-    plt.plot(x,y, color = "black",linestyle = 'dashed')
+    if color == False:
+    	plt.plot(x,y, color = "black",linestyle = 'dashed')
+    else:
+    	plt.plot(x,y, color = "purple",linestyle = 'solid')
 
-def graph_LEARNED(formula, min, max):
-    x = np.linspace(min, max, 200)
-    y = eval(formula)
-    plt.plot(x,y, color = "purple",linestyle = 'solid')
 
-def plots_for_gif(N,x,y,m,label,counter0,counter1, counter2):
+def plots_for_gif(N, x, y, m, m_true, label, counter0, counter1, counter2, true_line = False):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -30,17 +39,22 @@ def plots_for_gif(N,x,y,m,label,counter0,counter1, counter2):
     plt.xlabel('x')
     plt.ylabel('y')
     plt.title('Slope = %s, Intercept = %s'%(m[0], m[1]))
-    axes.set_xlim([0,10])
-    axes.set_ylim([0,10])
+    axes.set_xlim([0,1])
+    axes.set_ylim([0,1])
     
     for i in range(0,N):
         if label[i] == 1:
             ax.plot(x[i], y[i], "c.",  marker ='x', ms=10)
         else:
             ax.plot(x[i], y[i], "c.",  marker ='o', ms=10)
-
-    graph_LEARNED("x*{} + {}".format(m[0] ,m[1]), min, max)
-    plt.savefig('Plots/Anim_run_%s_i_%s_a_%s.png'%(counter0, counter1, counter2), bbox_inches='tight' )
+    if true_line == False:
+    	draw_line("x*{} + {}".format(m[0] ,m[1]), min, max, True)
+    	plt.savefig('Plots/Anim_run_%s_i_%s_a_%s.png'%(counter0, counter1, counter2), bbox_inches='tight' )
+    else:
+    	draw_line("x*{} + {}".format(m[0] ,m[1]), min, max, True)
+    	draw_line("x*{} + {}".format(m_true[0] ,m_true[1]), min, max, False)
+    	plt.savefig('Plots/Anim_run_%s_i_%s_a_%s.png'%(counter0, counter1, counter2), bbox_inches='tight' )
+    
 
 def classify_point(x, y, m, label):
 	y_calc = m[0]*x+m[1]
@@ -55,33 +69,61 @@ def classify_point(x, y, m, label):
 		classification = 1 #bad classification
 	return classification
 
-def main():
-        # N = 9 #number of training points in data set
-        # x = [6, 1, 3, 2, 5, 6, 7, 8, 9] #training data set
-        # y = [9, 6, 4, 5, 1, 4, 3, 5, 7]
-        # label = [-1, -1, -1, -1, 1, 1, 1, 1, 1] #labels for data, or teaching set
+class Sample_data_generator:
+    def __init__(self, N):
+        # Random linearly separated data
+        xA,yA,xB,yB = [random.uniform(0.25*max,0.75*max) for i in range(4)] #ensures true line is near the center of the canvas
+        self.V = np.array([xB*yA-xA*yB, yB-yA, xA-xB])
+        self.X = self.generate_points(N)
+ 
+    def generate_points(self, N):
+        X = []
+        for i in range(N):
+            x1,x2 = [random.uniform(min, max) for i in range(2)]
+            x = np.array([1,x1,x2])
+            s = int(np.sign(self.V.T.dot(x))) #generate labels
+            X.append((x, s, self.V))
+        return X
 
-        N = 9
-        x = [1, 2, 3, 5, 6, 6, 7, 8, 9] #training data set no. 2
-        y = [6, 5, 4, 1, 9, 4, 3, 5, 7]
-        label = [1, 1, 1, 1, -1, -1, -1, -1, -1]
+def main():
+
+        # N = 10
+        # x = [.1, .2, .3, .4, .5, .6, .6, .7, .8, .9] #training data set no. 1
+        # y = [.6, .5, .4, .4, .1, .9, .4, .3, .5, .7]
+        # label = [1, 1, 1, 1, 1, -1, -1, -1, -1, -1]
 
         # N = 4
-        # x = [2, 3, 7, 9] #training data set no. 3, showing XOR
-        # y = [2, 8, 2, 8]
+        # x = [.2, .3, .7, .9] #training data set no. 2, showing XOR
+        # y = [.2, .8, .2, .8]
         # label = [1, -1, -1, 1]
 
+        N = 50
+        x = []
+        y = []
+        label = []
+        p = Sample_data_generator(N)
+        training_data= p.X
+        m_true = -training_data[0][2][1]/training_data[0][2][2], -training_data[0][2][0]/training_data[0][2][2]
+        #print training_data
+        #print training_data[0][2][0]
+        for i in range(0,N):
+			x.append(training_data[i][0][1])
+			y.append(training_data[i][0][2])
+			label.append(training_data[i][1])
+        print label
+        
+        m = [1, 0.1] #m are my weigts, [0.01, 1], [-4, 8] #random guess
+        learning_rate = 0.1 #random guess
+        learning_rate_b = 0.1 #random guess
+        max_attempts = 200 #20 #maximum attempts allowed to learn a given data point. Might be redundant. If max attempts are exceeded, increase learning rate.
+        total_classification_errors = 1 #initialize
+        epoch = 1 #initialize; to count how many times learing is done over given data set
+        max_epochs = 1000000
+        learning_iterations = 0 #to count how many iterations needed for convergence
 
-        m = [0.01, 1] #m are my weigts, [0.01, 1], [-4, 8]
-        learning_rate = 0.15 #0.005
-        learning_rate_b = 1 #0.0002
-        max_attempts = 200 #20
-        total_classification_errors = 1 #initial guess
-        epoch = 1
+        #plots_for_gif(N, x, y, m, m_true,label, 0, 0, 0, True) #uncomment to get first image for gif
 
-        plots_for_gif(N, x, y, m, label, 0, 0, 0)
-
-        while total_classification_errors > 0:
+        while total_classification_errors > 0 and epoch < max_epochs:
 	        for i in range(0,N):
 	            attempts = 1
 	            classification = 1 #initialize with a bad classication
@@ -93,9 +135,10 @@ def main():
 	                	perceptron_output = -1*label[i] #technically it should be -1/label[i], but since labels are -1 or +1, it ends up being equivalent.
 	                	m[0] = m[0] + learning_rate*(label[i]-perceptron_output)*x[i]
 	                	m[1] = m[1] + learning_rate_b*(label[i]-perceptron_output)
-	                	plots_for_gif(N, x, y, m, label, epoch, i, attempts)
+	                	learning_iterations = learning_iterations + 1 #to count number of weight iterations needed for convergence
+	                	#plots_for_gif(N, x, y, m, m_true, label, epoch, i, attempts, True) #uncomment to get images for gif
 	                
-	                print i, attempts, classification
+	                #print i, attempts, classification
 	                attempts = attempts + 1
 	                if attempts == max_attempts:
 	                    print("I give up with point",i)
@@ -110,8 +153,9 @@ def main():
 
 			print epoch, total_classification_errors
 			epoch = epoch + 1
+	plots_for_gif(N, x, y, m, m_true, label, epoch, i, learning_iterations, True)
+	print (m, learning_iterations)
 
-        print (m)
 
 main()
 #plt.show()
