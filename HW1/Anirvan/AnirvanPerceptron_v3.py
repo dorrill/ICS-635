@@ -15,6 +15,7 @@ import os, subprocess
 import random
 import numpy as np
 from numpy import array
+import math
 
 import matplotlib.pyplot as plt
 
@@ -31,14 +32,14 @@ def draw_line(formula, min, max, color = False):
     	plt.plot(x,y, color = "purple",linestyle = 'solid')
 
 
-def plots_for_gif(N, x, y, m, m_true, label, counter0, counter1, counter2, true_line = False):
+def plots_for_gif(N, learning_rate, x, y, m, m_true, label, counter0, counter1, counter2, true_line = False):
     fig = plt.figure(figsize=(8,8))
     ax = fig.add_subplot(111)
 
     axes = plt.gca()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('True slope: %.3f, Learnt slope = %.3f, True intercept = %.3f, Learnt intercept = %.3f'%(m_true[0], m[0], m_true[1], m[1]))
+    plt.title('N: %d, LR: %s, Iterations: %d, True slope: %.3f, Learnt slope = %.3f, True intercept = %.3f, Learnt intercept = %.3f'%(N, learning_rate, counter2, m_true[0], m[0], m_true[1], m[1]))
     axes.set_xlim([0,1])
     axes.set_ylim([0,1])
     
@@ -49,11 +50,11 @@ def plots_for_gif(N, x, y, m, m_true, label, counter0, counter1, counter2, true_
             ax.plot(x[i], y[i], "c.",  marker ='o', ms=5)
     if true_line == False:
     	draw_line("x*{} + {}".format(m[0] ,m[1]), min, max, True)
-    	plt.savefig('Plots/Anim_run_%s_i_%s_a_%s.png'%(counter0, counter1, counter2), bbox_inches='tight' )
+    	plt.savefig('Plots/Anim_N_%s_run_%s_i_%s_iter_%s.png'%(N, counter0, counter1, counter2), bbox_inches='tight' )
     else:
     	draw_line("x*{} + {}".format(m[0] ,m[1]), min, max, True)
     	draw_line("x*{} + {}".format(m_true[0] ,m_true[1]), min, max, False)
-    	plt.savefig('Plots/Anim_run_%s_i_%s_a_%s.png'%(counter0, counter1, counter2), bbox_inches='tight' )
+    	plt.savefig('Plots/Anim_N_%s_LR_%s_run_%s_i_%s_iter_%s.png'%(N, learning_rate, counter0, counter1, counter2), bbox_inches='tight' )
     
 
 def classify_point(x, y, m, label):
@@ -68,6 +69,14 @@ def classify_point(x, y, m, label):
 	else:
 		classification = 1 #bad classification
 	return classification
+
+def find_margin(x, y, m): #for finding theoretical max_iterations = R^2/margin^2,
+	possible_margin = abs(x*(-m[0])+y-m[1])/math.sqrt(m[0]*m[0]+1) #distance between the true line and the closest point
+	return possible_margin
+
+def find_Radius(x, y, x0, y0): #for finding theoretical max_iterations = R^2/margin^2,
+	possible_R = math.sqrt( (x-x0)*(x-x0)+(y-y0)*(y-y0) ) #furthest point from the center of canvas: (0.5, 0.5)
+	return possible_R
 
 class Sample_data_generator:
     def __init__(self, N):
@@ -97,31 +106,51 @@ def main():
         # y = [.2, .8, .2, .8]
         # label = [1, -1, -1, 1]
 
-        N = 500
+        N = 50
         x = []
         y = []
         label = []
         p = Sample_data_generator(N)
         training_data= p.X
-        m_true = -training_data[0][2][1]/training_data[0][2][2], -training_data[0][2][0]/training_data[0][2][2]
+        m_true = -training_data[0][2][1]/training_data[0][2][2], -training_data[0][2][0]/training_data[0][2][2] #get true values from the p object
         #print training_data
         #print training_data[0][2][0]
         for i in range(0,N):
 			x.append(training_data[i][0][1])
 			y.append(training_data[i][0][2])
 			label.append(training_data[i][1])
-        print label
-        
+        #print label
+
+        #to find k_max
+        x_ave = 0
+        y_ave = 0
+        for i in range(0,N):
+        	x_ave = x_ave+x[i]
+        	y_ave = y_ave+y[i]
+        x_ave = x_ave/N
+        y_ave = y_ave/N
+        R0 = 0 #initialize
+        for i in range(0,N):
+        	R_guess = find_Radius(x[i], y[i], x_ave, y_ave)
+        	if R_guess > R0:
+        		R0 = R_guess
+        margin0 = 99 #initialize
+        for i in range(0,N):
+        	margin_guess = find_margin(x[i], y[i], m_true)
+        	if margin_guess < margin0:
+        		margin0 = margin_guess
+        k_max = R0*R0/(margin0*margin0)
+       
         m = [1, 0.1] #m are my weigts, [0.01, 1], [-4, 8] #random guess
         learning_rate = 0.01 #random guess
         learning_rate_b = 0.01 #random guess
         max_attempts = 200 #20 #maximum attempts allowed to learn a given data point. Might be redundant. If max attempts are exceeded, increase learning rate.
         total_classification_errors = 1 #initialize
         epoch = 1 #initialize; to count how many times learing is done over given data set
-        max_epochs = 1000000
+        max_epochs = 10000000
         learning_iterations = 0 #to count how many iterations needed for convergence
 
-        #plots_for_gif(N, x, y, m, m_true,label, 0, 0, 0, True) #uncomment to get first image for gif
+        #plots_for_gif(N, learning_rate, x, y, m, m_true,label, 0, 0, 0, True) #uncomment to get first image for gif
 
         while total_classification_errors > 0 and epoch < max_epochs:
 	        for i in range(0,N):
@@ -136,7 +165,7 @@ def main():
 	                	m[0] = m[0] + learning_rate*(label[i]-perceptron_output)*x[i]
 	                	m[1] = m[1] + learning_rate_b*(label[i]-perceptron_output)
 	                	learning_iterations = learning_iterations + 1 #to count number of weight iterations needed for convergence
-	                	#plots_for_gif(N, x, y, m, m_true, label, epoch, i, attempts, True) #uncomment to get images for gif
+	                	#plots_for_gif(N, learning_rate, x, y, m, m_true, label, epoch, i, attempts, True) #uncomment to get images for gif
 	                
 	                #print i, attempts, classification
 	                attempts = attempts + 1
@@ -151,14 +180,16 @@ def main():
 				classification = classify_point(x[i], y[i], m, label[i])
 				total_classification_errors = total_classification_errors + classification
 
-			print epoch, total_classification_errors
+			print epoch, total_classification_errors, learning_iterations, k_max
 			epoch = epoch + 1
-	plots_for_gif(N, x, y, m, m_true, label, epoch, i, learning_iterations, True)
-	print (m_true)
-	print (m, learning_iterations)
 
+	plots_for_gif(N, learning_rate, x, y, m, m_true, label, epoch, i, learning_iterations, True)
+	print ('x_ave: %.3f, y_ave: %.3f, R0: %.3f, margin0: %.3f, k_max %.0f'%(x_ave, y_ave, R0, margin0, k_max))
+	print ('True slope, Learnt slope') 
+	print (m_true, m)
+	print ('learning_iterations: %d'%(learning_iterations))
 
 main()
-plt.show()
+#plt.show()
 fig = plt.figure(2)
 
