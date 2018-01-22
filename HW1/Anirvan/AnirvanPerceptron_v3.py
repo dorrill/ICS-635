@@ -2,13 +2,12 @@
 #Creates a random true line, and generates data points with labels about that line
 #Then, it uses the perceptron model to try to learn the true line
 
-# Variables to play with
+# Variables to play with:
 # N, number of data points in sample
 # m, my weigts; random guess
 # learning_rate; for parameter m0 or slope; a random guess
 # learning_rate_b; for parameter m1 or y-intercept; a random guess
 # max_epochs; number of runs allowed over data set to learn true line
-
 
 import sys
 import os, subprocess
@@ -16,7 +15,6 @@ import random
 import numpy as np
 from numpy import array
 import math
-
 import matplotlib.pyplot as plt
 
 #define overall bounds for data, and parameters for the true line, which the perceptron needs to learn
@@ -95,7 +93,6 @@ class Sample_data_generator:
         return X
 
 def main():
-
         # N = 10
         # x = [.1, .2, .3, .4, .5, .6, .6, .7, .8, .9] #training data set no. 1
         # y = [.6, .5, .4, .4, .1, .9, .4, .3, .5, .7]
@@ -106,6 +103,7 @@ def main():
         # y = [.2, .8, .2, .8]
         # label = [1, -1, -1, 1]
 
+        #Generate a random data set for training
         N = 50
         x = []
         y = []
@@ -121,7 +119,8 @@ def main():
 			label.append(training_data[i][1])
         #print label
 
-        #to find k_max
+
+        #to find k_max, the theoretical maximum number of iterations needed for guaranteed convergence 
         x_ave = 0
         y_ave = 0
         for i in range(0,N):
@@ -140,7 +139,9 @@ def main():
         	if margin_guess < margin0:
         		margin0 = margin_guess
         k_max = R0*R0/(margin0*margin0)
+
        
+        #Define and initilaize variables
         m = [1, 0.1] #m are my weigts, [0.01, 1], [-4, 8] #random guess
         learning_rate = 0.01 #random guess
         learning_rate_b = 0.01 #random guess
@@ -160,6 +161,7 @@ def main():
 	            while classification == 1 and attempts < max_attempts:
 	                classification = classify_point(x[i], y[i], m, label[i]) #classify point x[i], y[i]
 
+	                #this is where learning happens
 	                if classification == 1: #if classification is bad, weights are shifted/trained.
 	                	perceptron_output = -1*label[i] #technically it should be -1/label[i], but since labels are -1 or +1, it ends up being equivalent.
 	                	m[0] = m[0] + learning_rate*(label[i]-perceptron_output)*x[i]
@@ -172,9 +174,9 @@ def main():
 	                if attempts == max_attempts:
 	                    print("I give up with point",i)
 
-			#now test the final weights on the sample, to check if they still classify all training points correctly
-			#for each point in sample, see if it still correctly classified.
-			#if any classification is bad, repeat the for loop
+			#now test the final weights on the sample, to check if they still classify all training points correctly.
+			#for each point in sample, check if it is still correctly classified.
+			#if any paoint's classification is bad, repeat the learning process over the entire training set
 			total_classification_errors = 0
 			for i in range(0,N):
 				classification = classify_point(x[i], y[i], m, label[i])
@@ -185,7 +187,7 @@ def main():
 
 	plots_for_gif(N, learning_rate, x, y, m, m_true, label, epoch, i, learning_iterations, True)
 	print ('x_ave: %.3f, y_ave: %.3f, R0: %.3f, margin0: %.3f, k_max %.0f'%(x_ave, y_ave, R0, margin0, k_max))
-	print ('True slope, Learnt slope') 
+	print ('True slope, Learnt slope:') 
 	print (m_true, m)
 	print ('learning_iterations: %d'%(learning_iterations))
 
